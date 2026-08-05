@@ -192,7 +192,7 @@
       btn.innerText = translations[currentLang].submitBtn;
       btn.disabled = false;
       results.style.display = "block";
-      reportContent.innerHTML = data.resultHtml;
+      reportContent.innerHTML = data.result || data.resultHtml || data.text || JSON.stringify(data);
 
     } catch (error) {
       btn.innerText = translations[currentLang].submitBtn;
