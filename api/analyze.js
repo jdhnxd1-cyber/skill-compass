@@ -1,34 +1,33 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
 
-  const { university, courses, lang } = req.body;
+    try {
+        const { university, courses, lang } = req.body;
+        
+        // جلب المفتاح من Environment Variables
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ error: 'API Key is missing' });
+        }
 
-  const prompt = `
-    أنت خبير توجيه مهني وتحليل مناهج أكاديمية متقدم.
-    اسم الكلية والجامعة: ${university}
-    المواد والمقررات الدراسية المدخلة: ${courses}
-    اللغة المطلوبة للتقرير: ${lang === 'ar' ? 'العربية' : 'الانجليزية'}
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    قم بتقديم تحليل مهني مخصص وفريد تماماً بناءً على الكلية والمواد المحددة أعلاه، ونسّق الرد في كود HTML مباشر (استخدم عناصر div, h3, p, ul, li) بدون أي رموز Markdown:
+        const prompt = `أنت خبير توجيه مهني. قم بتحليل المواد التالية واقترح الوظائف والمهارات المطلوبة.
+        الجامعة/التخصص: ${university}
+        المواد الدراسية: ${courses}
+        اللغة المطلوبة للرد: ${lang === 'en' ? 'English' : 'العربية'}`;
 
-    1. قسم الكلية والجاهزية: عرض اسم الكلية وتحديد نسبة الجاهزية الحقيقية لسوق العمل بالأرقام (مثال: 75%).
-    2. قسم الفجوات المهارية والمقترحات: استخراج 2 إلى 3 فجوات مهارية محددة لهذه المواد ومقترحات سدها.
-    3. قسم الفرص الوظيفية والتدريبية (Internships): ترشيح وظيفتين أو تدريبين مناسبين للتخصص المذكور مع تحديد نسبة التطابق والمهارات المطلوبة لكل وظيفة.
-  `;
+        const result = await model.generateContent(prompt);
+        const responseText = await result.response.text();
 
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(prompt);
-    const responseText = await result.response.text();
-
-    res.status(200).json({ resultHtml: responseText });
-  } catch (error) {
-    res.status(500).json({ error: "خطأ في تحليل البيانات بواسطة AI" });
-  }
+        return res.status(200).json({ result: responseText });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'خطأ في تحليل البيانات بواسطة AI', details: error.message });
+    }
 }
