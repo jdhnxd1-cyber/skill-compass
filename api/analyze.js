@@ -15,7 +15,7 @@ export default async function handler(req, res) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }, { apiVersion: "v1" });
         const prompt = `أنت خبير توجيه مهني. قم بتحليل المواد التالية واقترح الوظائف والمهارات المطلوبة.
         الجامعة/التخصص: ${university}
         المواد الدراسية: ${courses}
