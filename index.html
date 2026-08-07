@@ -1,206 +1,156 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skill Compass - منصة التوجيه المهني</title>
-  <style>
-    :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #1e293b;
-      --border: #cbd5e1;
-      --accent: #10b981;
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      padding: 20px;
-      direction: rtl;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: var(--card-bg);
-      padding: 35px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      position: relative;
-    }
-
-    .lang-switch {
-      position: absolute;
-      top: 25px;
-      left: 25px;
-    }
-
-    html[dir="ltr"] .lang-switch { left: auto; right: 25px; }
-
-    .lang-btn {
-      background: #e2e8f0;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    header { text-align: center; margin-bottom: 35px; margin-top: 10px; }
-    header h1 { color: var(--primary); font-size: 2.4rem; margin-bottom: 8px; }
-    header p { color: #64748b; font-size: 1.05rem; }
-
-    .form-group { margin-bottom: 22px; }
-    label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 1rem; }
-
-    input[type="text"], textarea {
-      width: 100%; padding: 14px; border: 1px solid var(--border);
-      border-radius: 8px; font-size: 1rem; outline: none;
-    }
-
-    .file-upload-box {
-      border: 2px dashed var(--primary); padding: 25px;
-      text-align: center; border-radius: 10px; background: #eff6ff;
-    }
-
-    .submit-btn {
-      background-color: var(--primary); color: white; border: none;
-      padding: 16px 28px; border-radius: 8px; font-size: 1.15rem;
-      font-weight: bold; cursor: pointer; width: 100%; transition: background 0.3s;
-    }
-
-    .submit-btn:hover { background-color: var(--primary-hover); }
-
-    #results {
-      margin-top: 40px; padding-top: 25px;
-      border-top: 2px dashed var(--border); display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Compass - التوجيه المهني</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            color: #38bdf8;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+        }
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #result {
+            margin-top: 25px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            display: none;
+            color: #e2e8f0;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="lang-switch">
-    <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">English 🌐</button>
-  </div>
+    <div class="container">
+        <h1>Skill Compass</h1>
+        <p class="subtitle">المنصة الذكية لتحليل المناهج الأكاديمية وترشيح الوظائف</p>
+        
+        <div class="form-group">
+            <label>اسم الجامعة والكلية/التخصص:</label>
+            <input type="text" id="university" placeholder="مثال: جامعة بني سويف التكنولوجية - تكنولوجيا الكهرباء">
+        </div>
 
-  <header>
-    <h1>Skill Compass 🧭</h1>
-    <p id="subTitle">المنصة الذكية لتحليل المناهج الأكاديمية واكتشاف الفجوات المهارية وترشيح الوظائف</p>
-  </header>
+        <div class="form-group">
+            <label>أدخل المواد والمقررات الدراسية:</label>
+            <textarea id="courses" placeholder="مثال: التحكم الآلي، برمجة PLC، الدوائر الكهربائية..."></textarea>
+        </div>
 
-  <form id="analysisForm">
-    <div class="form-group">
-      <label id="lblUniv" for="university">🏛️ اسم الجامعة والكلية/التخصص:</label>
-      <input type="text" id="university" placeholder="مثال: جامعة بني سويف التكنولوجية - تكنولوجيا الكهرباء والأتمتة" required>
+        <button id="analyzeBtn">تحليل المنهج وتوليد التقرير 🚀</button>
+
+        <div id="result"></div>
     </div>
 
-    <div class="form-group">
-      <label id="lblCourses" for="courses">📚 أدخل المواد والمقررات الدراسية (مفصولة بفاصلة):</label>
-      <textarea id="courses" rows="4" placeholder="مثال: التحكم الآلي، برمجة PLC، الدوائر الكهربائية، التحكم الرقمي..."></textarea>
-    </div>
+    <script>
+        document.getElementById('analyzeBtn').addEventListener('click', async () => {
+            const university = document.getElementById('university').value;
+            const courses = document.getElementById('courses').value;
+            const resultDiv = document.getElementById('result');
 
-    <div class="form-group">
-      <label id="lblPdf">📄 أو قم برفع ملف الـ PDF المباشر للمنهج / Syllabus:</label>
-      <div class="file-upload-box">
-        <input type="file" id="pdfFile" accept=".pdf">
-      </div>
-    </div>
+            if (!university || !courses) {
+                alert('من فضلك ادخل اسم الجامعة والمواد الدراسية أولاً!');
+                return;
+            }
 
-    <button type="submit" class="submit-btn" id="submitBtn">✨ تحليل المنهج وتوليد التقرير والوظائف</button>
-  </form>
+            resultDiv.style.display = 'block';
+            resultDiv.innerText = 'جاري تحليل المنهج وإعداد التقرير بواسطة الذكطء الاصطناعي... ⏳';
 
-  <div id="results">
-    <h2 id="resTitle" style="margin-bottom: 20px; color: var(--primary);">📊 تقرير الجاهزية والفرص المتاحة</h2>
-    <div id="reportContent"></div>
-  </div>
-</div>
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: `الجامعة والتخصص: ${university}\nالمواد: ${courses}` })
+                });
 
-<script>
-  let currentLang = 'ar';
+                const data = await response.json();
 
-  const translations = {
-    ar: {
-      langBtn: 'English 🌐',
-      subTitle: 'المنصة الذكية لتحليل المناهج الأكاديمية واكتشاف الفجوات المهارية وترشيح الوظائف',
-      lblUniv: '🏛️ اسم الجامعة والكلية/التخصص:',
-      phUniv: 'مثال: جامعة بني سويف التكنولوجية - تكنولوجيا الكهرباء والأتمتة',
-      lblCourses: '📚 أدخل المواد والمقررات الدراسية (مفصولة بفاصلة):',
-      phCourses: 'مثال: التحكم الآلي، برمجة PLC، الدوائر الكهربائية، التحكم الرقمي...',
-      lblPdf: '📄 أو قم برفع ملف الـ PDF المباشر للمنهج / Syllabus:',
-      submitBtn: '✨ تحليل المنهج وتوليد التقرير والوظائف',
-      resTitle: '📊 تقرير الجاهزية والفرص المتاحة',
-      loading: '⏳ جاري التحليل المخصص بواسطة Gemini API...'
-    },
-    en: {
-      langBtn: 'العربية 🌐',
-      subTitle: 'Smart Platform for Academic Syllabus Analysis, Skill Gap Detection & Job Matching',
-      lblUniv: '🏛️ University & Faculty / Specialization:',
-      phUniv: 'e.g., Technological University - Electrical & Automation Tech',
-      lblCourses: '📚 Enter Courses & Subjects (comma separated):',
-      phCourses: 'e.g., Automatic Control, PLC Programming, Electric Circuits, Digital Control...',
-      lblPdf: '📄 Or upload your Academic Program PDF / Syllabus:',
-      submitBtn: '✨ Analyze Syllabus & Generate Report',
-      resTitle: '📊 Readiness Report & Job Opportunities',
-      loading: '⏳ Generating Personalized Report via Gemini API...'
-    }
-  };
-
-  function toggleLanguage() {
-    currentLang = currentLang === 'ar' ? 'en' : 'ar';
-    const t = translations[currentLang];
-    document.documentElement.lang = currentLang;
-    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-    document.getElementById('langToggle').innerText = t.langBtn;
-    document.getElementById('subTitle').innerText = t.subTitle;
-    document.getElementById('lblUniv').innerText = t.lblUniv;
-    document.getElementById('university').placeholder = t.phUniv;
-    document.getElementById('lblCourses').innerText = t.lblCourses;
-    document.getElementById('courses').placeholder = t.phCourses;
-    document.getElementById('lblPdf').innerText = t.lblPdf;
-    document.getElementById('submitBtn').innerText = t.submitBtn;
-    document.getElementById('resTitle').innerText = t.resTitle;
-  }
-
-  document.getElementById('analysisForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const results = document.getElementById('results');
-    const reportContent = document.getElementById('reportContent');
-
-    const university = document.getElementById('university').value;
-    const courses = document.getElementById('courses').value;
-
-    btn.innerText = translations[currentLang].loading;
-    btn.disabled = true;
-
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ university, courses, lang: currentLang })
-      });
-
-      const data = await response.json();
-      btn.innerText = translations[currentLang].submitBtn;
-      btn.disabled = false;
-      results.style.display = "block";
-      reportContent.innerHTML = data.result || data.resultHtml || data.text || JSON.stringify(data);
-
-    } catch (error) {
-      btn.innerText = translations[currentLang].submitBtn;
-      btn.disabled = false;
-      alert("حدث خطأ في الاتصال بالذكاء الاصطناعي، يرجى إعادة المحاولة.");
-    }
-  });
-</script>
-
+                if (data.result) {
+                    resultDiv.innerText = data.result;
+                } else {
+                    resultDiv.innerText = 'خطأ: ' + (data.error || 'حدث خطأ غير معروف');
+                }
+            } catch (err) {
+                resultDiv.innerText = 'فشل الاتصال بالخادم: ' + err.message;
+            }
+        });
+    </script>
 </body>
 </html>
