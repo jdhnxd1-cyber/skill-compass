@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Compass 🧭</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Rakkas&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --ink:#1c2b3a;
+    --parchment:#f2e8d5;
+    --parchment-dark:#e6d7b8;
+    --sea:#0d2740;
+    --sea-deep:#061422;
+    --gold:#c8992e;
+    --gold-bright:#e7b84b;
+    --coral:#c8593f;
+    --teal:#2f6b6a;
+    --line: rgba(28,43,58,0.25);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Tajawal', Tahoma, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(120,180,220,0.06), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(80,140,190,0.05), transparent 45%),
+      var(--sea);
+    color:var(--parchment);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:24px 14px 60px;
+    overflow-x:hidden;
+    position:relative;
+  }
+  .map-bg{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    overflow:hidden;
+    background:var(--sea-deep);
+  }
+  .map-bg svg{
+    width:100%;
+    height:100%;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    position:relative;
+    z-index:1;
+  }
+  /* ---------- header / compass ---------- */
+  .brand{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .compass-wrap{
+    width:46px; height:46px; position:relative;
+  }
+  .compass-rose{
+    width:100%; height:100%;
+    transition: transform 1s cubic-bezier(.6,.1,.3,1);
+    filter: drop-shadow(0 0 6px rgba(231,184,75,0.5));
+  }
+  .brand h1{
+    font-family:'Rakkas', serif;
+    font-size:26px;
+    color:var(--gold-bright);
+    letter-spacing:0.5px;
+  }
+  /* ---------- progress path ---------- */
+  .path{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    margin-bottom:26px;
+    padding:0 4px;
+  }
+  .path .dot{
+    width:11px; height:11px; border-radius:50%;
+    background:var(--parchment-dark);
+    opacity:0.35;
+    border:2px solid transparent;
+    transition: all .4s ease;
+    flex-shrink:0;
+  }
+  .path .dot.active{
+    opacity:1;
+    background:var(--gold-bright);
+    box-shadow:0 0 8px rgba(231,184,75,0.7);
+    transform:scale(1.25);
+  }
+  .path .dot.done{ opacity:0.9; background:var(--teal); }
+  .path .seg{
+    flex:1;
+    height:2px;
+    background: repeating-linear-gradient(90deg, var(--parchment-dark) 0 6px, transparent 6px 11px);
+    opacity:0.35;
+  }
+  .path .seg.done{ opacity:0.9; background:var(--teal); }
+
+  /* ---------- card ---------- */
+  .card{
+    background: var(--parchment);
+    color:var(--ink);
+    border-radius:18px;
+    padding:26px 22px 24px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(28,43,58,0.08);
+    position:relative;
+    background-image:
+      radial-gradient(rgba(28,43,58,0.05) 1px, transparent 1px);
+    background-size:14px 14px;
+    animation: rise .5s ease;
+  }
+  @keyframes rise{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:1px;
+    color:var(--coral);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .card h2{
+    font-family:'Rakkas', serif;
+    font-size:22px;
+    margin-bottom:4px;
+    color:var(--sea);
+  }
+  .card p.sub{
+    font-size:13.5px;
+    color:rgba(28,43,58,0.65);
+    margin-bottom:20px;
+    line-height:1.6;
+  }
+
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    margin:14px 0 6px;
+    color:var(--sea);
+  }
+  input[type=text], input[type=email], input[type=number], textarea, select{
+    width:100%;
+    border:1.5px solid rgba(28,43,58,0.2);
+    background:rgba(255,255,255,0.6);
+    border-radius:10px;
+    padding:11px 13px;
+    font-family:inherit;
+    font-size:14.5px;
+    color:var(--ink);
+    outline:none;
+    transition:border .2s, background .2s;
+  }
+  input:focus, textarea:focus, select:focus{
+    border-color:var(--gold);
+    background:#fff;
+  }
+  textarea{ min-height:110px; resize:vertical; line-height:1.6; }
+
+  .row2{ display:flex; gap:10px; }
+  .row2 > div{ flex:1; }
+
+  .grad-toggle{
+    display:flex; align-items:center; gap:8px; margin-top:8px;
+    font-size:13px; color:var(--sea); font-weight:600;
+  }
+  .grad-toggle input{ width:16px; height:16px; accent-color:var(--coral); }
+
+  .upload-box{
+    border:2px dashed rgba(28,43,58,0.3);
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+    font-size:13px;
+    color:rgba(28,43,58,0.6);
+    margin-top:8px;
+    cursor:pointer;
+    transition:border-color .2s, background .2s;
+  }
+  .upload-box:hover{ border-color:var(--gold); background:rgba(200,153,46,0.08); }
+  .upload-box.filled{ border-color:var(--teal); color:var(--teal); font-weight:700; background:rgba(47,107,106,0.08); }
+  input[type=file]{ display:none; }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    margin-top:22px;
+    padding:14px 18px;
+    border:none;
+    border-radius:12px;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color:var(--sea-deep);
+    font-family:inherit;
+    font-weight:900;
+    font-size:15.5px;
+    cursor:pointer;
+    box-shadow:0 8px 18px rgba(200,153,46,0.35);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 12px 22px rgba(200,153,46,0.45); }
+  .btn:active{ transform:translateY(0); }
+  .btn.secondary{
+    background:transparent;
+    color:var(--sea);
+    box-shadow:none;
+    border:1.5px solid rgba(28,43,58,0.25);
+    margin-top:10px;
+  }
+  .btn:disabled{ opacity:0.55; cursor:not-allowed; transform:none; }
+
+  .err{ color:var(--coral); font-size:12.5px; margin-top:8px; font-weight:700; }
+
+  /* ---------- landing ---------- */
+  .landing{ text-align:center; padding:10px 4px 4px; }
+  .landing .big-compass{ width:130px; height:130px; margin:6px auto 18px; animation: spin-slow 40s linear infinite; }
+  @keyframes spin-slow{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  .landing h1{
+    font-family:'Rakkas', serif;
+    font-size:34px;
+    color:var(--gold-bright);
+    margin-bottom:8px;
+  }
+  .landing p{ font-size:14.5px; color:rgba(242,232,213,0.75); line-height:1.8; max-width:380px; margin:0 auto 26px; }
+  .landing .feat{
+    display:flex; flex-direction:column; gap:10px; margin:0 auto 28px; max-width:360px; text-align:right;
+  }
+  .landing .feat div{
+    background:rgba(242,232,213,0.06);
+    border:1px solid rgba(242,232,213,0.12);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:13.5px;
+    display:flex; align-items:center; gap:10px;
+  }
+
+  /* ---------- loading ---------- */
+  .loading{ text-align:center; padding:50px 10px; }
+  .loading .compass-rose{ width:70px; height:70px; margin:0 auto 20px; animation: seek 1.6s ease-in-out infinite; }
+  @keyframes seek{ 0%{transform:rotate(0deg);} 50%{transform:rotate(190deg);} 100%{transform:rotate(360deg);} }
+  .loading h2{ font-family:'Rakkas', serif; font-size:20px; color:var(--sea); margin-bottom:6px;}
+  .loading p{ font-size:13px; color:rgba(28,43,58,0.6); }
+
+  /* ---------- results ---------- */
+  .result-hero{
+    text-align:center; margin-bottom:6px;
+  }
+  .result-hero .eyebrow{ text-align:center; }
+  .result-hero h2{ font-size:24px; }
+  .result-hero p.sub{ margin-bottom:6px; }
+
+  .stop{
+    position:relative;
+    padding:16px 16px 16px 16px;
+    margin-top:16px;
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 3px 10px rgba(28,43,58,0.08), inset 0 0 0 1px rgba(28,43,58,0.06);
+  }
+  .stop::before{
+    content:"";
+    position:absolute;
+    right:-8px; top:22px;
+    width:14px; height:14px;
+    border-radius:50%;
+    background:var(--sea);
+    border:3px solid var(--parchment);
+  }
+  .stop h3{
+    font-family:'Rakkas', serif;
+    font-size:16.5px;
+    color:var(--sea);
+    margin-bottom:10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    font-size:12.5px;
+    padding:7px 11px;
+    border-radius:20px;
+    background:rgba(23,48,73,0.06);
+    border:1px solid rgba(23,48,73,0.12);
+    line-height:1.5;
+  }
+  .chip.accredited{ background:rgba(47,107,106,0.12); border-color:rgba(47,107,106,0.3); color:var(--teal); font-weight:700;}
+  .chip.free{ background:rgba(200,89,63,0.08); border-color:rgba(200,89,63,0.25); color:var(--coral); font-weight:700;}
+  .badge{
+    font-size:10.5px;
+    padding:2px 7px;
+    border-radius:8px;
+    margin-right:6px;
+    font-weight:900;
+  }
+  .badge.yes{ background:var(--teal); color:#fff; }
+  .badge.no{ background:rgba(28,43,58,0.15); color:var(--sea); }
+  .place-item{ font-size:13.5px; padding:9px 0; border-bottom:1px dashed rgba(28,43,58,0.15); }
+  .place-item:last-child{ border-bottom:none; }
+  .place-item b{ color:var(--sea); }
+  .place-item .type{ font-size:11.5px; color:var(--coral); font-weight:700; }
+  .market-box{ font-size:13.5px; line-height:1.9; color:var(--ink); }
+  .timeframe{
+    display:inline-block; margin-top:6px; background:var(--gold); color:var(--sea-deep);
+    padding:6px 14px; border-radius:20px; font-weight:900; font-size:13px;
+  }
+  ul.tips{ padding-right:18px; font-size:13.5px; line-height:2; }
+
+  .foot-actions{ display:flex; gap:10px; margin-top:22px; }
+  .foot-actions .btn{ margin-top:0; }
+
+  /* ---------- login / save note ---------- */
+  .link-btn{
+    background:none; border:none; color:var(--parchment);
+    text-decoration:underline; font-family:inherit; font-size:13.5px;
+    cursor:pointer; opacity:0.85; margin-top:4px;
+  }
+  .link-btn:hover{ opacity:1; }
+  .save-note{
+    display:flex; align-items:center; gap:6px;
+    font-size:12px; color:rgba(28,43,58,0.55);
+    margin-top:14px; text-align:center; justify-content:center;
+  }
+  .login-toggle{ text-align:center; margin-top:14px; }
+</style>
+</head>
+<body>
+<div class="map-bg">
+  <svg viewBox="0 0 800 1600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="ocean" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0f3050"/>
+        <stop offset="55%" stop-color="#0a2038"/>
+        <stop offset="100%" stop-color="#050f1c"/>
+      </linearGradient>
+      <radialGradient id="landShade" cx="35%" cy="30%" r="75%">
+        <stop offset="0%" stop-color="#2a5878"/>
+        <stop offset="100%" stop-color="#12293e"/>
+      </radialGradient>
+    </defs>
+
+    <rect x="0" y="0" width="800" height="1600" fill="url(#ocean)"/>
+
+    <!-- lat/long grid -->
+    <g stroke="#6fb6dd" stroke-width="1" opacity="0.07">
+      <line x1="0" y1="160" x2="800" y2="160"/>
+      <line x1="0" y1="320" x2="800" y2="320"/>
+      <line x1="0" y1="480" x2="800" y2="480"/>
+      <line x1="0" y1="640" x2="800" y2="640"/>
+      <line x1="0" y1="800" x2="800" y2="800"/>
+      <line x1="0" y1="960" x2="800" y2="960"/>
+      <line x1="0" y1="1120" x2="800" y2="1120"/>
+      <line x1="0" y1="1280" x2="800" y2="1280"/>
+      <line x1="0" y1="1440" x2="800" y2="1440"/>
+      <line x1="100" y1="0" x2="100" y2="1600"/>
+      <line x1="250" y1="0" x2="250" y2="1600"/>
+      <line x1="400" y1="0" x2="400" y2="1600"/>
+      <line x1="550" y1="0" x2="550" y2="1600"/>
+      <line x1="700" y1="0" x2="700" y2="1600"/>
+    </g>
+
+    <!-- landmasses: stylised but continent-like coastlines -->
+    <g stroke="#6fb6dd" stroke-width="2" stroke-linejoin="round" opacity="0.9">
+      <!-- north-west continent, Europe/Africa-like -->
+      <path fill="url(#landShade)" fill-opacity="0.5" stroke-opacity="0.35" d="
+        M 40 120
+        C 90 90 150 95 190 70
+        C 230 45 280 55 300 95
+        C 320 130 290 150 310 180
+        C 340 210 330 260 290 270
+        C 320 320 310 380 270 420
+        C 300 470 290 540 250 600
+        C 280 660 260 730 210 760
+        C 230 810 200 860 150 850
+        C 110 840 100 780 120 730
+        C 80 700 70 640 100 590
+        C 60 560 50 500 90 460
+        C 50 420 55 350 100 320
+        C 60 290 55 230 100 190
+        C 60 170 30 150 40 120 Z"/>
+
+      <!-- large eastward continent, Asia-like -->
+      <path fill="url(#landShade)" fill-opacity="0.5" stroke-opacity="0.35" d="
+        M 330 90
+        C 420 40 520 30 610 60
+        C 690 85 760 70 800 110
+        L 800 340
+        C 760 360 700 350 660 380
+        C 630 410 640 460 590 480
+        C 620 520 590 570 540 560
+        C 560 610 520 650 470 630
+        C 440 670 380 660 360 610
+        C 330 630 290 600 300 550
+        C 260 540 250 490 290 460
+        C 260 420 280 370 330 360
+        C 300 330 310 280 360 260
+        C 330 230 340 180 390 160
+        C 350 140 320 110 330 90 Z"/>
+
+      <!-- Americas-like landmass -->
+      <path fill="url(#landShade)" fill-opacity="0.5" stroke-opacity="0.35" d="
+        M 610 640
+        C 660 610 720 620 750 660
+        C 780 700 760 750 720 770
+        C 750 810 730 860 690 870
+        C 710 920 680 970 630 960
+        C 650 1010 610 1060 570 1040
+        C 590 1090 550 1140 510 1110
+        C 500 1160 460 1200 430 1170
+        C 450 1230 410 1280 380 1250
+        C 400 1310 370 1360 340 1330
+        C 320 1380 280 1400 260 1360
+        C 230 1330 250 1280 280 1260
+        C 250 1220 270 1170 310 1160
+        C 290 1120 310 1070 350 1060
+        C 330 1020 360 970 400 970
+        C 380 930 410 890 450 890
+        C 430 850 460 810 500 810
+        C 480 770 510 730 550 730
+        C 530 690 570 650 610 640 Z"/>
+
+      <!-- small southern island / Australia-like -->
+      <path fill="url(#landShade)" fill-opacity="0.5" stroke-opacity="0.35" d="
+        M 480 1230
+        C 540 1210 610 1220 640 1260
+        C 670 1300 640 1340 590 1350
+        C 610 1380 580 1410 540 1400
+        C 500 1420 460 1400 460 1360
+        C 430 1340 440 1300 470 1280
+        C 450 1250 460 1230 480 1230 Z"/>
+    </g>
+
+    <!-- topographic contour hints inside landmasses -->
+    <g stroke="#9fd4ef" stroke-width="1" fill="none" opacity="0.14">
+      <path d="M 90 200 C 140 180 190 190 220 220 C 250 250 230 290 190 300"/>
+      <path d="M 420 200 C 480 170 540 180 580 220 C 610 250 590 290 550 300"/>
+      <path d="M 660 780 C 700 760 740 780 750 820 C 760 860 730 890 690 880"/>
+      <path d="M 350 1050 C 400 1030 450 1050 460 1090 C 470 1130 430 1160 390 1150"/>
+    </g>
+
+    <!-- coastal contour lines -->
+    <g stroke="#4a86ab" stroke-width="1" fill="none" opacity="0.2">
+      <path d="M 30 130 C 100 100 180 100 260 90"/>
+      <path d="M 340 100 C 450 60 580 60 700 100"/>
+      <path d="M 600 660 C 680 650 740 680 770 730"/>
+    </g>
+
+    <!-- dotted trade / voyage routes -->
+    <g stroke="#a9d8ef" stroke-width="2.2" stroke-dasharray="1 9" stroke-linecap="round" opacity="0.4" fill="none">
+      <path d="M 200 260 Q 380 400 340 620"/>
+      <path d="M 340 620 Q 480 720 640 700"/>
+      <path d="M 640 700 Q 540 900 350 1050"/>
+      <path d="M 350 1050 Q 480 1150 560 1290"/>
+      <path d="M 620 260 Q 470 480 340 620"/>
+    </g>
+    <g fill="#c9ecff" opacity="0.65">
+      <circle cx="200" cy="260" r="4"/>
+      <circle cx="340" cy="620" r="4"/>
+      <circle cx="640" cy="700" r="4"/>
+      <circle cx="350" cy="1050" r="4"/>
+      <circle cx="560" cy="1290" r="4"/>
+      <circle cx="620" cy="260" r="4"/>
+    </g>
+
+    <!-- large faint compass rose -->
+    <g transform="translate(400 850)" opacity="0.09" stroke="#9fd4ef" fill="none">
+      <circle r="230" stroke-width="1.5"/>
+      <circle r="170" stroke-width="1"/>
+      <circle r="110" stroke-width="1"/>
+      <g stroke-width="1.5">
+        <line x1="0" y1="-230" x2="0" y2="230"/>
+        <line x1="-230" y1="0" x2="230" y2="0"/>
+        <line x1="-162" y1="-162" x2="162" y2="162"/>
+        <line x1="-162" y1="162" x2="162" y2="-162"/>
+      </g>
+      <polygon points="0,-230 18,0 0,230 -18,0" fill="#9fd4ef" stroke="none"/>
+    </g>
+
+    <!-- small compass rose accent top -->
+    <g transform="translate(650 130)" opacity="0.12" stroke="#9fd4ef" fill="none">
+      <circle r="70" stroke-width="1.2"/>
+      <line x1="0" y1="-70" x2="0" y2="70" stroke-width="1"/>
+      <line x1="-70" y1="0" x2="70" y2="0" stroke-width="1"/>
+      <polygon points="0,-70 6,0 0,70 -6,0" fill="#9fd4ef" stroke="none"/>
+    </g>
+  </svg>
+</div>
+<div class="app" id="app"></div>
+
+<script>
+/* ---------------- State ---------------- */
+const state = {
+  step: 0, // 0 landing, 1 identity, 2 academic, 3 courses, 4 loading, 5 results
+  name:'', email:'',
+  university:'', college:'', department:'', year:'', graduated:false,
+  courses:'', fileText:'', fileName:'',
+  result: null,
+  error:'',
+  savedOk: false
+};
+
+const COMPASS_SVG = `
+<svg class="compass-rose" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="46" fill="none" stroke="#e7b84b" stroke-width="2"/>
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#e7b84b" stroke-width="1" opacity="0.5"/>
+  <g stroke="#e7b84b" stroke-width="1" opacity="0.6">
+    <line x1="50" y1="4" x2="50" y2="14"/>
+    <line x1="50" y1="86" x2="50" y2="96"/>
+    <line x1="4" y1="50" x2="14" y2="50"/>
+    <line x1="86" y1="50" x2="96" y2="50"/>
+  </g>
+  <polygon points="50,14 58,50 50,86 42,50" fill="#e7b84b"/>
+  <polygon points="14,50 50,42 86,50 50,58" fill="#c8593f"/>
+  <circle cx="50" cy="50" r="5" fill="#f2e8d5" stroke="#1c2b3a" stroke-width="1.5"/>
+</svg>`;
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'brand';
+  if(state.step >= 1 && state.step <= 3){
+    header.innerHTML = `<div class="compass-wrap">${COMPASS_SVG}</div><h1>Skill Compass</h1>`;
+  }
+  if(state.step >=1 && state.step <=3){
+    app.appendChild(header);
+    app.appendChild(buildPath());
+  }
+
+  let view;
+  if(state.step === 0) view = viewLanding();
+  else if(state.step === 'login') view = viewLogin();
+  else if(state.step === 1) view = viewIdentity();
+  else if(state.step === 2) view = viewAcademic();
+  else if(state.step === 3) view = viewCourses();
+  else if(state.step === 4) view = viewLoading();
+  else if(state.step === 5) view = viewResults();
+  app.appendChild(view);
+}
+
+function buildPath(){
+  const wrap = document.createElement('div');
+  wrap.className = 'path';
+  const total = 3;
+  for(let i=1;i<=total;i++){
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i===state.step ? ' active' : (i<state.step ? ' done':''));
+    wrap.appendChild(dot);
+    if(i<total){
+      const seg = document.createElement('div');
+      seg.className = 'seg' + (i<state.step ? ' done':'');
+      wrap.appendChild(seg);
+    }
+  }
+  return wrap;
+}
+
+/* ---------------- Views ---------------- */
+function viewLanding(){
+  const d = document.createElement('div');
+  d.className = 'landing';
+  d.innerHTML = `
+    <div class="big-compass">${COMPASS_SVG}</div>
+    <h1>Skill Compass 🧭</h1>
+    <p>خريطتك الشخصية من أول ما تدخل الكلية لحد سوق الشغل. هنرشحلك كورسات وشهادات وأماكن تدريب على حسب كليتك والمواد اللي بتدرسها، عشان تتخرج وسيرتك الذاتية جاهزة فعلاً للسوق.</p>
+    <div class="feat">
+      <div>🧭 <span>خريطة تفاعلية بتوريك طريقك خطوة بخطوة</span></div>
+      <div>🎓 <span>كورسات وشهادات معتمدة وغير معتمدة على حسب قسمك</span></div>
+      <div>🏭 <span>أماكن تدريب: شركات، مصانع، معامل حسب كليتك</span></div>
+      <div>📈 <span>احتياجات السوق الحالية والمهارات المطلوبة</span></div>
+    </div>
+  `;
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = 'ابدأ الرحلة 🧭';
+  btn.onclick = ()=>{ state.step = 1; render(); };
+  d.appendChild(btn);
+
+  const loginWrap = document.createElement('div');
+  loginWrap.className = 'login-toggle';
+  loginWrap.innerHTML = `<button class="link-btn" id="go-login">عندي خريطة محفوظة بالفعل، أدخلها 🔑</button>`;
+  d.appendChild(loginWrap);
+  loginWrap.querySelector('#go-login').onclick = ()=>{ state.step='login'; render(); };
+  return d;
+}
+
+function viewLogin(){
+  const c = fieldCard(`
+    <div class="eyebrow">تسجيل الدخول</div>
+    <h2>ارجع لخريطتك</h2>
+    <p class="sub">اكتب نفس الإيميل اللي استخدمته قبل كده عشان نرجعلك بياناتك ونتيجتك.</p>
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="f-login-email" placeholder="example@email.com">
+    <div class="err" id="err"></div>
+  `);
+  const back = document.createElement('button');
+  back.className='btn secondary'; back.textContent='رجوع';
+  back.onclick=()=>{ state.step=0; render(); };
+
+  const btn = document.createElement('button');
+  btn.className='btn'; btn.textContent='دخول';
+  btn.onclick = async ()=>{
+    const email = c.querySelector('#f-login-email').value.trim();
+    const errBox = c.querySelector('#err');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      errBox.textContent = 'اكتب إيميل صحيح.';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'بندور على خريطتك...';
+    const profile = await loadProfile(email);
+    btn.disabled = false; btn.textContent = 'دخول';
+    if(!profile){
+      errBox.textContent = 'مفيش خريطة محفوظة بالإيميل ده. جرب تبدأ رحلة جديدة.';
+      return;
+    }
+    Object.assign(state, profile);
+    state.error = '';
+    state.savedOk = true;
+    state.step = profile.result ? 5 : 1;
+    render();
+  };
+  c.appendChild(back);
+  c.appendChild(btn);
+  return c;
+}
+
+function fieldCard(inner){
+  const c = document.createElement('div');
+  c.className = 'card';
+  c.innerHTML = inner;
+  return c;
+}
+
+function viewIdentity(){
+  const c = fieldCard(`
+    <div class="eyebrow">المحطة الأولى</div>
+    <h2>مين اللي بيمسك الخريطة؟</h2>
+    <p class="sub">هنستخدم بياناتك دي بس عشان نرجعلك بنتيجتك ونطورلك خريطتك بعدين.</p>
+    <label>الاسم</label>
+    <input type="text" id="f-name" placeholder="اكتب اسمك" value="${state.name}">
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="f-email" placeholder="example@email.com" value="${state.email}">
+    <div class="err" id="err"></div>
+  `);
+  const btn = document.createElement('button');
+  btn.className='btn'; btn.textContent='التالي ←';
+  btn.onclick = ()=>{
+    const name = document.getElementById('f-name').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(!name || !emailOk){
+      document.getElementById('err').textContent = 'اكتب اسمك وإيميل صحيح عشان نكمل الرحلة.';
+      return;
+    }
+    state.name = name; state.email = email;
+    state.step = 2; render();
+  };
+  c.appendChild(btn);
+  return c;
+}
+
+function viewAcademic(){
+  const c = fieldCard(`
+    <div class="eyebrow">المحطة الثانية</div>
+    <h2>مسارك الدراسي</h2>
+    <p class="sub">اكتب بياناتك الجامعية زي ما هي، مهما كانت مدة الدراسة عندك (٤، ٥، ٦ سنين أو أكتر).</p>
+    <label>الجامعة</label>
+    <input type="text" id="f-uni" placeholder="مثال: جامعة القاهرة" value="${state.university}">
+    <label>الكلية</label>
+    <input type="text" id="f-col" placeholder="مثال: كلية الهندسة" value="${state.college}">
+    <label>القسم</label>
+    <input type="text" id="f-dept" placeholder="مثال: هندسة الحاسبات" value="${state.department}">
+    <div class="row2">
+      <div>
+        <label>السنة الدراسية الحالية</label>
+        <input type="number" min="1" max="10" id="f-year" placeholder="مثال: 3" value="${state.year}">
+      </div>
+    </div>
+    <div class="grad-toggle">
+      <input type="checkbox" id="f-grad" ${state.graduated?'checked':''}>
+      <label style="margin:0" for="f-grad">أنا خريج بالفعل</label>
+    </div>
+    <div class="err" id="err"></div>
+  `);
+  const back = document.createElement('button');
+  back.className='btn secondary'; back.textContent='رجوع';
+  back.onclick=()=>{ state.step=1; render(); };
+
+  const btn = document.createElement('button');
+  btn.className='btn'; btn.textContent='التالي ←';
+  btn.onclick = ()=>{
+    const uni = document.getElementById('f-uni').value.trim();
+    const col = document.getElementById('f-col').value.trim();
+    const dept = document.getElementById('f-dept').value.trim();
+    const year = document.getElementById('f-year').value.trim();
+    const grad = document.getElementById('f-grad').checked;
+    if(!uni || !col || !dept || (!grad && !year)){
+      document.getElementById('err').textContent = 'كمّل البيانات الأساسية (الجامعة، الكلية، القسم، والسنة الدراسية أو إنك خريج).';
+      return;
+    }
+    state.university=uni; state.college=col; state.department=dept; state.year=year; state.graduated=grad;
+    state.step=3; render();
+  };
+  c.appendChild(back);
+  c.appendChild(btn);
+  return c;
+}
+
+function viewCourses(){
+  const c = fieldCard(`
+    <div class="eyebrow">المحطة الثالثة</div>
+    <h2>إيه اللي بتدرسه؟</h2>
+    <p class="sub">اكتب أسماء المواد اللي بتدرسها دلوقتي أو درستها، أو ارفع ملف PDF لخطة المنهج/الشهادة الدراسية.</p>
+    <label>المواد الدراسية</label>
+    <textarea id="f-courses" placeholder="مثال: هياكل بيانات، قواعد بيانات، شبكات، ...">${state.courses}</textarea>
+    <label>أو ارفع ملف PDF</label>
+    <div class="upload-box ${state.fileName ? 'filled':''}" id="upload-box">
+      ${state.fileName ? ('✅ تم رفع: '+state.fileName) : '📄 اضغط هنا لرفع ملف PDF'}
+    </div>
+    <input type="file" id="f-file" accept="application/pdf">
+    <div class="err" id="err"></div>
+  `);
+  const uploadBox = c.querySelector('#upload-box');
+  const fileInput = c.querySelector('#f-file');
+  uploadBox.onclick = ()=> fileInput.click();
+  fileInput.onchange = async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    uploadBox.textContent = '⏳ بنقرأ الملف...';
+    try{
+      const text = await extractPdfText(file);
+      state.fileText = text;
+      state.fileName = file.name;
+      uploadBox.textContent = '✅ تم رفع: '+file.name;
+      uploadBox.classList.add('filled');
+    }catch(err){
+      uploadBox.textContent = '⚠️ ما قدرناش نقرأ الملف، اكتب المواد يدويًا بدل كده';
+    }
+  };
+
+  const back = document.createElement('button');
+  back.className='btn secondary'; back.textContent='رجوع';
+  back.onclick=()=>{ state.step=2; render(); };
+
+  const btn = document.createElement('button');
+  btn.className='btn'; btn.textContent='ارسم خريطتي 🧭';
+  btn.onclick = ()=>{
+    state.courses = c.querySelector('#f-courses').value.trim();
+    if(!state.courses && !state.fileText){
+      c.querySelector('#err').textContent = 'اكتب المواد أو ارفع ملف عشان نقدر نرشحلك بدقة.';
+      return;
+    }
+    state.step = 4; render();
+    generateRecommendations();
+  };
+  c.appendChild(back);
+  c.appendChild(btn);
+  return c;
+}
+
+function viewLoading(){
+  const d = document.createElement('div');
+  d.className = 'card loading';
+  d.innerHTML = `
+    ${COMPASS_SVG}
+    <h2>بنرسم خريطتك...</h2>
+    <p>بنحلل قسمك والمواد اللي درستها عشان نطلعلك أفضل مسار للتخرج والسوق.</p>
+  `;
+  return d;
+}
+
+function viewResults(){
+  const c = document.createElement('div');
+  c.className = 'card';
+  if(state.error){
+    c.innerHTML = `
+      <div class="eyebrow">حصل عائق</div>
+      <h2>معرفناش نرسم الخريطة</h2>
+      <p class="sub">${state.error}</p>
+    `;
+    const retry = document.createElement('button');
+    retry.className='btn'; retry.textContent='حاول تاني';
+    retry.onclick = ()=>{ state.step=4; render(); generateRecommendations(); };
+    c.appendChild(retry);
+    return c;
+  }
+
+  const r = state.result || {};
+  const courses = r.courses || [];
+  const certs = r.certificates || [];
+  const places = r.training_places || [];
+  const tips = r.cv_tips || [];
+
+  c.innerHTML = `
+    <div class="result-hero">
+      <div class="eyebrow">خريطتك جاهزة يا ${escapeHtml(state.name)}</div>
+      <h2>مسارك نحو ${escapeHtml(state.department || 'تخصصك')}</h2>
+      <p class="sub">${escapeHtml(state.college)} — ${escapeHtml(state.university)}</p>
+      ${r.roadmap_years ? `<span class="timeframe">🕒 محتاج تقريبًا: ${escapeHtml(r.roadmap_years)}</span>` : ''}
+    </div>
+
+    <div class="stop">
+      <h3>🎓 كورسات مقترحة</h3>
+      <div class="chip-row">
+        ${courses.map(x=>`<span class="chip ${x.accredited?'accredited':'free'}">${x.accredited?'<span class="badge yes">معتمد</span>':'<span class="badge no">غير معتمد</span>'} ${escapeHtml(x.name)}${x.provider? ' — '+escapeHtml(x.provider):''}</span>`).join('') || '<span class="chip">لا توجد بيانات كافية</span>'}
+      </div>
+    </div>
+
+    <div class="stop">
+      <h3>📜 شهادات يُنصح بها</h3>
+      <div class="chip-row">
+        ${certs.map(x=>`<span class="chip ${x.accredited?'accredited':'free'}">${x.accredited?'<span class="badge yes">معتمدة</span>':'<span class="badge no">غير معتمدة</span>'} ${escapeHtml(x.name)}${x.provider? ' — '+escapeHtml(x.provider):''}</span>`).join('') || '<span class="chip">لا توجد بيانات كافية</span>'}
+      </div>
+    </div>
+
+    <div class="stop">
+      <h3>🏭 أماكن تدريب مقترحة</h3>
+      ${places.map(x=>`<div class="place-item"><span class="type">${escapeHtml(x.type||'')}</span> · <b>${escapeHtml(x.name)}</b><br>${escapeHtml(x.note||'')}</div>`).join('') || '<div class="place-item">لا توجد بيانات كافية</div>'}
+    </div>
+
+    <div class="stop">
+      <h3>📈 احتياجات السوق الحالي</h3>
+      <div class="market-box">${escapeHtml(r.market_needs || 'لا توجد بيانات كافية حاليًا.')}</div>
+    </div>
+
+    ${tips.length ? `
+    <div class="stop">
+      <h3>✅ نصائح لسيرتك الذاتية</h3>
+      <ul class="tips">${tips.map(t=>`<li>${escapeHtml(t)}</li>`).join('')}</ul>
+    </div>` : ''}
+  `;
+
+  const note = document.createElement('div');
+  note.className = 'save-note';
+  if(state.savedOk){
+    note.innerHTML = `💾 خريطتك محفوظة على إيميلك، تقدر ترجعلها في أي وقت من "عندي خريطة محفوظة بالفعل".`;
+    c.appendChild(note);
+  } else {
+    note.innerHTML = `⚠️ معرفناش نحفظ خريطتك دلوقتي، لكن النتيجة قدامك هنا. تقدر تحاول تحفظها تاني.`;
+    c.appendChild(note);
+    const retrySave = document.createElement('button');
+    retrySave.className = 'btn secondary';
+    retrySave.style.marginTop = '8px';
+    retrySave.textContent = 'حاول تحفظ الخريطة تاني';
+    retrySave.onclick = async ()=>{
+      retrySave.disabled = true; retrySave.textContent = 'بنحفظ...';
+      state.savedOk = await saveProfile();
+      render();
+    };
+    c.appendChild(retrySave);
+  }
+
+  const foot = document.createElement('div');
+  foot.className='foot-actions';
+  const restart = document.createElement('button');
+  restart.className='btn secondary'; restart.textContent='رحلة جديدة';
+  restart.onclick = ()=>{
+    Object.assign(state, {step:0, name:'', email:'', university:'', college:'', department:'', year:'', graduated:false, courses:'', fileText:'', fileName:'', result:null, error:'', savedOk:false});
+    render();
+  };
+  foot.appendChild(restart);
+  c.appendChild(foot);
+  return c;
+}
+
+function escapeHtml(s){
+  if(s===undefined || s===null) return '';
+  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---------------- Persistent storage ---------------- */
+async function saveProfile(){
+  if(!state.email) return false;
+  const payload = {
+    name: state.name, email: state.email,
+    university: state.university, college: state.college, department: state.department,
+    year: state.year, graduated: state.graduated,
+    courses: state.courses, fileName: state.fileName,
+    result: state.result,
+    savedAt: new Date().toISOString()
+  };
+  for(let attempt=0; attempt<2; attempt++){
+    try{
+      const resp = await fetch('/api/save-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: state.email, payload })
+      });
+      if(resp.ok) return true;
+    }catch(err){
+      console.error('تعذر حفظ البيانات (محاولة ' + (attempt+1) + '):', err);
+    }
+    await new Promise(r=>setTimeout(r, 400));
+  }
+  return false;
+}
+
+async function loadProfile(email){
+  try{
+    const resp = await fetch('/api/load-profile?email=' + encodeURIComponent(email.trim().toLowerCase()));
+    if(!resp.ok) return null;
+    return await resp.json();
+  }catch(err){
+    return null;
+  }
+}
+
+/* ---------------- PDF extraction ---------------- */
+async function extractPdfText(file){
+  const arrayBuffer = await file.arrayBuffer();
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  let text = '';
+  const maxPages = Math.min(pdf.numPages, 15);
+  for(let i=1;i<=maxPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it=>it.str).join(' ') + '\n';
+  }
+  return text.slice(0, 6000);
+}
+
+/* ---------------- AI Recommendation call ---------------- */
+async function generateRecommendations(){
+  try{
+    const response = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        university: state.university,
+        college: state.college,
+        department: state.department,
+        year: state.year,
+        graduated: state.graduated,
+        courses: state.courses,
+        fileText: state.fileText
+      })
+    });
+    const data = await response.json();
+    if(!response.ok || data.error){
+      throw new Error(data.error || ('HTTP ' + response.status));
+    }
+    state.result = data;
+    state.error = '';
+    state.savedOk = await saveProfile();
+  }catch(err){
+    state.error = 'حصلت مشكلة في تحليل بياناتك. (تفاصيل تقنية: ' + err.message + ') جرب تاني كمان شوية.';
+  }
+  state.step = 5;
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
