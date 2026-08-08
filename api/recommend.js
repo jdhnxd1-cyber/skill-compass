@@ -43,7 +43,8 @@ ${subjectsInfo}
 رشّح كورسات، شهادات، أماكن تدريب، احتياجات السوق، ونصائح CV بناءً على البيانات دي.`;
 
   try {
-    const model = 'gemini-2.5-flash'; // عدّل الاسم هنا لو ظهر إصدار أحدث في Google AI Studio
+  const modelName = "gemini-1.5-flash";
+   // عدّل الاسم هنا لو ظهر إصدار أحدث في Google AI Studio
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const geminiRes = await fetch(url, {
