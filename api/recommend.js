@@ -45,7 +45,7 @@ ${subjectsInfo}
   try {
   const modelName = "gemini-1.5-flash";
    // عدّل الاسم هنا لو ظهر إصدار أحدث في Google AI Studio
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const geminiRes = await fetch(url, {
       method: 'POST',
